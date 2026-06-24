@@ -6,7 +6,8 @@
     "address": "台北市信義區林口街 51 號（範例）",
     "phone": "02-1234-5678（範例）",
     "timezone": "Asia/Taipei",
-    "is_open": true
+    "is_open": true,
+    "business_hours": { "open": "11:00", "close": "23:59" }
   },
   "menu": {
     "categories": [

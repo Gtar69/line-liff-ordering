@@ -7,7 +7,10 @@ export default defineConfig({
     environment: "node",
     include: ["**/*.int.test.ts"],
     exclude: ["node_modules", ".next"],
-    testTimeout: 20000,
+    testTimeout: 30000,
+    // 整合測試共用同一個 DB，且部分測試會切換 store 狀態，故不並行。
+    fileParallelism: false,
+    sequence: { concurrent: false },
   },
   resolve: {
     alias: {

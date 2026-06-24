@@ -17,6 +17,7 @@ export async function importMenu(prisma: PrismaClient, data: MenuFile) {
       phone: data.store.phone,
       timezone: data.store.timezone,
       isOpen: data.store.is_open,
+      businessHours: data.store.business_hours ?? undefined,
     };
     const store = existing
       ? await tx.store.update({ where: { id: existing.id }, data: storeData })

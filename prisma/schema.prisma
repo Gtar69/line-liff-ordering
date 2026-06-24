@@ -121,10 +121,11 @@ model Order {
   customerName  String       @map("customer_name") @db.VarChar(100)
   customerPhone String       @map("customer_phone") @db.VarChar(30)
   note          String?      @db.VarChar(200)
-  subtotal      Int
-  total         Int
-  lineUserId    String?      @map("line_user_id") @db.VarChar(100)
-  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  subtotal       Int
+  total          Int
+  lineUserId     String?      @map("line_user_id") @db.VarChar(100)
+  idempotencyKey String?      @unique @map("idempotency_key") @db.VarChar(100)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   store         Store                @relation(fields: [storeId], references: [id])

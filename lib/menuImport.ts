@@ -56,6 +56,7 @@ const storeSchema = z.object({
   phone: z.string().nullable().default(null),
   timezone: z.string().default("Asia/Taipei"),
   is_open: z.boolean().default(true),
+  business_hours: z.record(z.any()).nullish(),
 });
 
 export const menuFileSchema = z

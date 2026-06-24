@@ -9,6 +9,7 @@ import type {
   OptionGroup as PrismaOptionGroup,
   Store as PrismaStore,
 } from "@prisma/client";
+import type { OrderWithDetails } from "@/lib/orders";
 
 export function toStoreDTO(store: PrismaStore): Store {
   return {
@@ -65,5 +66,32 @@ export function toMenuDTO(
   return {
     categories: categories.map(toCategoryDTO),
     items: items.map(toMenuItemDTO),
+  };
+}
+
+/** 訂單建立 / 完成頁回應（對應 docs/API.md POST /api/orders 201）。 */
+export function toOrderResponse(order: OrderWithDetails) {
+  return {
+    id: order.id,
+    order_number: order.orderNumber,
+    status: order.status,
+    store_name: order.store.name,
+    pickup_method: order.pickupMethod,
+    pickup_time: order.pickupTime.toISOString(),
+    subtotal: order.subtotal,
+    total: order.total,
+    items: order.items.map((i) => ({
+      name: i.nameSnapshot,
+      unit_price: i.unitPriceSnapshot,
+      quantity: i.quantity,
+      line_total: i.lineTotal,
+      options: i.options.map((o) => ({
+        group_name: o.groupNameSnapshot,
+        label: o.optionLabelSnapshot,
+        price_delta: o.priceDeltaSnapshot,
+      })),
+    })),
+    created_at: order.createdAt.toISOString(),
+    payment_note: "請於取餐時到店付款",
   };
 }

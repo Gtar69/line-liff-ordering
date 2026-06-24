@@ -81,3 +81,52 @@ export function generatePickupSlots(
   }
   return slots;
 }
+
+/** 驗證指定取餐時間是否合法（與 generatePickupSlots 同規則）：未過期、對齊間隔、僅當天、不超過營業結束。 */
+export function isPickupSlotValid(
+  target: Date,
+  now: Date,
+  config: Omit<PickupConfig, "maxSlots">,
+): boolean {
+  if (Number.isNaN(target.getTime())) return false;
+  const intervalMs = config.intervalMinutes * 60_000;
+  const startEpoch = now.getTime() + config.leadMinutes * 60_000;
+  const firstEpoch = Math.ceil(startEpoch / intervalMs) * intervalMs;
+  if (target.getTime() < firstEpoch) return false;
+  if (target.getTime() % intervalMs !== 0) return false;
+
+  const tp = tzParts(target, config.timezone);
+  const np = tzParts(now, config.timezone);
+  if (dateKey(tp) !== dateKey(np)) return false;
+
+  const total = Number(tp.hour) * 60 + Number(tp.minute);
+  if (total > config.closeHour * 60 + config.closeMinute) return false;
+  return true;
+}
+
+/** 訂單編號的日期前綴（店家時區），如 20260624。 */
+export function storeDatePrefix(date: Date, timezone: string): string {
+  const p = tzParts(date, timezone);
+  return `${p.year}${p.month}${p.day}`;
+}
+
+/** 由 store.businessHours 解析當天營業結束時間（{ "close": "HH:mm" }），否則用預設 22:00。 */
+export function resolveClose(businessHours: unknown): {
+  hour: number;
+  minute: number;
+} {
+  if (
+    businessHours &&
+    typeof businessHours === "object" &&
+    "close" in businessHours &&
+    typeof (businessHours as { close: unknown }).close === "string"
+  ) {
+    const [h, m] = (businessHours as { close: string }).close
+      .split(":")
+      .map((v) => Number(v));
+    if (Number.isInteger(h) && h >= 0 && h <= 23) {
+      return { hour: h, minute: Number.isInteger(m) ? m : 0 };
+    }
+  }
+  return { hour: DEFAULT_CLOSE_HOUR, minute: DEFAULT_CLOSE_MINUTE };
+}
