@@ -110,3 +110,18 @@
 - 不要把參考截圖中的店名、分類、商品、圖片或價格寫成固定產品需求。
 - 不要只因為參考產品截圖中有某個功能，就做出 PRD 範圍外的功能。
 - 當實作需要資料庫、API、驗收測試或 LINE 設定細節時，先建立對應文件並取得使用者確認，再開始寫程式。
+
+## 本機開發（Issue #1 起）
+
+技術棧：Next.js(App Router) + TypeScript + Tailwind + Vitest。
+
+```bash
+npm install        # 安裝相依套件
+npm run dev        # 啟動開發伺服器 http://localhost:3000
+npm run lint       # ESLint
+npm run format     # Prettier 格式化（format:check 只檢查）
+npm run test       # Vitest 單元測試
+npm run build      # production build
+```
+
+環境變數：複製 `.env.example` 為 `.env.local` 後填值；`.env*` 不會 commit。CI 於 push / PR 時跑 lint、format、test、build（見 `.github/workflows/ci.yml`）。
