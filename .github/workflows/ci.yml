@@ -50,6 +50,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/liff_ordering?schema=public
+      ADMIN_API_TOKEN: ci-admin-token
     steps:
       - uses: actions/checkout@v4
 
