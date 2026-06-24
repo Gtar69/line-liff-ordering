@@ -1,11 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+/** 整合測試（需 DATABASE_URL 連到 Postgres）。於 CI 的 db job 執行。 */
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["**/*.test.ts", "**/*.test.tsx"],
-    exclude: ["node_modules", ".next", "**/*.int.test.ts"],
+    include: ["**/*.int.test.ts"],
+    exclude: ["node_modules", ".next"],
+    testTimeout: 20000,
   },
   resolve: {
     alias: {
