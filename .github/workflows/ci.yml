@@ -70,3 +70,6 @@ jobs:
 
       - name: Verify seed integrity
         run: npx tsx scripts/verify-seed.ts
+
+      - name: API integration tests
+        run: npm run test:int
