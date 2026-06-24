@@ -255,4 +255,4 @@ order_items *───0..1 menu_items   (參考用，可為 null)
 - `id` 採 uuid 或 bigint 皆可，於 Prisma schema 統一定義。
 - 部署：應用 Vercel、資料庫 Neon / Supabase（Postgres）；本機開發以通道工具提供 LIFF 所需 HTTPS。
 
-> 實際 `schema.prisma` 與 migration 於後端基礎 issue 建立時產出，欄位以本文件為準。
+> 已於 Issue #3 實作：`prisma/schema.prisma`、初始 migration（含 CHECK 約束）、`prisma/seed.ts` 與 `scripts/import-menu.ts`（zod 驗證的菜單匯入）。CI 以 Postgres service 實跑 migrate + seed + 完整性檢查。

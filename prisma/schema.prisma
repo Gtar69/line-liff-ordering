@@ -1,0 +1,181 @@
+// Prisma schema — 對應 docs/DB_SCHEMA.md（v1）。
+// 原則：菜單為商家可配置資料、訂單以快照保存、金額整數（元）、單店單門市。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  pending
+  preparing
+  ready
+  picked_up
+  cancelled
+}
+
+enum PickupMethod {
+  self_pickup
+}
+
+model Store {
+  id                    String   @id @default(uuid()) @db.Uuid
+  name                  String   @db.VarChar(100)
+  address               String?  @db.VarChar(255)
+  phone                 String?  @db.VarChar(50)
+  timezone              String   @default("Asia/Taipei") @db.VarChar(50)
+  pickupLeadMinutes     Int      @default(15) @map("pickup_lead_minutes")
+  pickupIntervalMinutes Int      @default(15) @map("pickup_interval_minutes")
+  businessHours         Json?    @map("business_hours")
+  isOpen                Boolean  @default(true) @map("is_open")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  categories Category[]
+  menuItems  MenuItem[]
+  orders     Order[]
+
+  @@map("stores")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+
+  @@index([storeId, sortOrder])
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  storeId     String   @map("store_id") @db.Uuid
+  categoryId  String   @map("category_id") @db.Uuid
+  name        String   @db.VarChar(150)
+  description String?  @db.Text
+  imageUrl    String?  @map("image_url") @db.VarChar(500)
+  price       Int
+  isAvailable Boolean  @default(true) @map("is_available")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  optionGroups OptionGroup[]
+  orderItems   OrderItem[]
+
+  @@index([storeId, categoryId, sortOrder])
+  @@index([name])
+  @@map("menu_items")
+}
+
+model OptionGroup {
+  id         String  @id @default(uuid()) @db.Uuid
+  menuItemId String  @map("menu_item_id") @db.Uuid
+  name       String  @db.VarChar(100)
+  isRequired Boolean @default(false) @map("is_required")
+  minSelect  Int     @default(0) @map("min_select")
+  maxSelect  Int     @default(1) @map("max_select")
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  options  Option[]
+
+  @@index([menuItemId, sortOrder])
+  @@map("option_groups")
+}
+
+model Option {
+  id            String  @id @default(uuid()) @db.Uuid
+  optionGroupId String  @map("option_group_id") @db.Uuid
+  label         String  @db.VarChar(100)
+  priceDelta    Int     @default(0) @map("price_delta")
+  isAvailable   Boolean @default(true) @map("is_available")
+  sortOrder     Int     @default(0) @map("sort_order")
+
+  optionGroup OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@index([optionGroupId, sortOrder])
+  @@map("options")
+}
+
+model Order {
+  id            String       @id @default(uuid()) @db.Uuid
+  storeId       String       @map("store_id") @db.Uuid
+  orderNumber   String       @unique @map("order_number") @db.VarChar(30)
+  status        OrderStatus  @default(pending)
+  pickupMethod  PickupMethod @default(self_pickup) @map("pickup_method")
+  pickupTime    DateTime     @map("pickup_time") @db.Timestamptz(6)
+  customerName  String       @map("customer_name") @db.VarChar(100)
+  customerPhone String       @map("customer_phone") @db.VarChar(30)
+  note          String?      @db.VarChar(200)
+  subtotal      Int
+  total         Int
+  lineUserId    String?      @map("line_user_id") @db.VarChar(100)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  store         Store                @relation(fields: [storeId], references: [id])
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+
+  @@index([storeId, createdAt])
+  @@index([storeId, status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String  @id @default(uuid()) @db.Uuid
+  orderId            String  @map("order_id") @db.Uuid
+  menuItemId         String? @map("menu_item_id") @db.Uuid
+  nameSnapshot       String  @map("name_snapshot") @db.VarChar(150)
+  unitPriceSnapshot  Int     @map("unit_price_snapshot")
+  quantity           Int
+  lineTotal          Int     @map("line_total")
+
+  order    Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem?         @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  options  OrderItemOption[]
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderItemOption {
+  id                  String @id @default(uuid()) @db.Uuid
+  orderItemId         String @map("order_item_id") @db.Uuid
+  groupNameSnapshot   String @map("group_name_snapshot") @db.VarChar(100)
+  optionLabelSnapshot String @map("option_label_snapshot") @db.VarChar(100)
+  priceDeltaSnapshot  Int    @default(0) @map("price_delta_snapshot")
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([orderItemId])
+  @@map("order_item_options")
+}
+
+model OrderStatusHistory {
+  id         String       @id @default(uuid()) @db.Uuid
+  orderId    String       @map("order_id") @db.Uuid
+  fromStatus OrderStatus? @map("from_status")
+  toStatus   OrderStatus  @map("to_status")
+  changedBy  String?      @map("changed_by") @db.VarChar(100)
+  changedAt  DateTime     @default(now()) @map("changed_at") @db.Timestamptz(6)
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, changedAt])
+  @@map("order_status_history")
+}
