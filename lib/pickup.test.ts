@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { generatePickupSlots, type PickupConfig } from "./pickup";
+import {
+  generatePickupSlots,
+  isPickupSlotValid,
+  type PickupConfig,
+} from "./pickup";
 
 const cfg: PickupConfig = {
   leadMinutes: 15,
@@ -57,5 +61,43 @@ describe("generatePickupSlots", () => {
     const now = new Date("2026-06-24T08:00:00+08:00");
     const slots = generatePickupSlots(now, { ...cfg, maxSlots: 3 });
     expect(slots).toHaveLength(3);
+  });
+});
+
+describe("isPickupSlotValid", () => {
+  const now = new Date("2026-06-24T08:00:00+08:00");
+
+  it("accepts a valid aligned future slot today", () => {
+    const target = new Date("2026-06-24T08:30:00+08:00");
+    expect(isPickupSlotValid(target, now, cfg)).toBe(true);
+  });
+
+  it("rejects a past time", () => {
+    const target = new Date("2026-06-24T08:00:00+08:00");
+    expect(isPickupSlotValid(target, now, cfg)).toBe(false);
+  });
+
+  it("rejects a time before now + lead", () => {
+    const target = new Date("2026-06-24T08:10:00+08:00");
+    expect(isPickupSlotValid(target, now, cfg)).toBe(false);
+  });
+
+  it("rejects a misaligned time", () => {
+    const target = new Date("2026-06-24T08:37:00+08:00");
+    expect(isPickupSlotValid(target, now, cfg)).toBe(false);
+  });
+
+  it("rejects a time after close", () => {
+    const target = new Date("2026-06-24T22:30:00+08:00");
+    expect(isPickupSlotValid(target, now, cfg)).toBe(false);
+  });
+
+  it("rejects a slot on a different day", () => {
+    const target = new Date("2026-06-25T12:00:00+08:00");
+    expect(isPickupSlotValid(target, now, cfg)).toBe(false);
+  });
+
+  it("rejects an invalid date", () => {
+    expect(isPickupSlotValid(new Date("nope"), now, cfg)).toBe(false);
   });
 });

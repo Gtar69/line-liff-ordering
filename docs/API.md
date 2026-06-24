@@ -339,6 +339,6 @@ Query 參數：
 
 ## 已知待處理（開 issue 時補，不在本批文件範圍）
 
-- **訂單建立冪等性**：對應 `ACCEPTANCE_TESTS.md` G2「重試不產生重複訂單」。建議於後端訂單 issue 實作 `Idempotency-Key` header（client 產生，伺服器短時間內對同 key 回傳同一筆訂單；DB 可加 `orders.idempotency_key` UNIQUE）。本批文件先不定稿其欄位細節。
+- ~~**訂單建立冪等性**~~：✅ 已於 Issue #5 實作。`POST /api/orders` 接受 `Idempotency-Key` header；`orders.idempotency_key` 為 nullable UNIQUE；同 key 重送回傳同一筆訂單（200），不重複建立。對應 ACCEPTANCE G2。
 - **LINE 前置資源**：LIFF ID / Channel ID / Channel Secret / 官方帳號 Rich Menu / 對外 HTTPS 網址，尚未建立，待 LINE 整合 issue 補（見 `docs/LINE_SETUP.md`）。
 - **Admin token 輪換 / 多帳號**：MVP 單一共用 token 足夠；如需多帳號或角色分權為日後增強。
