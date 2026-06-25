@@ -67,6 +67,33 @@ export interface SelectedOption {
   price_delta: number;
 }
 
+/** POST /api/orders 的回應（對應 docs/API.md 201） */
+export interface OrderResponseItemOption {
+  group_name: string;
+  label: string;
+  price_delta: number;
+}
+export interface OrderResponseItem {
+  name: string;
+  unit_price: number;
+  quantity: number;
+  line_total: number;
+  options: OrderResponseItemOption[];
+}
+export interface OrderResponse {
+  id: string;
+  order_number: string;
+  status: string;
+  store_name: string;
+  pickup_method: string;
+  pickup_time: string;
+  subtotal: number;
+  total: number;
+  items: OrderResponseItem[];
+  created_at: string;
+  payment_note: string;
+}
+
 /** 購物車品項；同商品不同選項組合視為不同 line（以 lineKey 區分） */
 export interface CartLine {
   /** 前端唯一鍵：item_id + 已選 option_ids 排序組合 */
