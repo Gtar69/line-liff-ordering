@@ -12,6 +12,14 @@ export const adminDetailInclude = {
   statusHistory: { orderBy: { changedAt: "asc" } },
 } satisfies Prisma.OrderInclude;
 
+export const kitchenInclude = {
+  items: { include: { options: true } },
+} satisfies Prisma.OrderInclude;
+
+export type KitchenOrder = Prisma.OrderGetPayload<{
+  include: typeof kitchenInclude;
+}>;
+
 export type AdminListOrder = Prisma.OrderGetPayload<{
   include: typeof adminListInclude;
 }>;
@@ -33,6 +41,22 @@ export function toAdminListItem(order: AdminListOrder) {
       .map((i) => `${i.nameSnapshot} x${i.quantity}`)
       .join("、"),
     item_count: order.items.length,
+  };
+}
+
+export function toKitchenTicket(order: KitchenOrder) {
+  return {
+    id: order.id,
+    order_number: order.orderNumber,
+    status: order.status,
+    created_at: order.createdAt.toISOString(),
+    pickup_time: order.pickupTime.toISOString(),
+    note: order.note,
+    items: order.items.map((i) => ({
+      name: i.nameSnapshot,
+      quantity: i.quantity,
+      options: i.options.map((o) => o.optionLabelSnapshot),
+    })),
   };
 }
 

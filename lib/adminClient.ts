@@ -3,7 +3,11 @@
  * 帶 Authorization: Bearer <token>；token 由使用者在後台輸入、存 localStorage。
  */
 import { ApiError } from "@/lib/apiClient";
-import type { AdminOrderDetail, AdminOrderListItem } from "@/lib/types";
+import type {
+  AdminOrderDetail,
+  AdminOrderListItem,
+  KitchenTicket,
+} from "@/lib/types";
 
 async function adminFetch<T>(
   path: string,
@@ -40,6 +44,16 @@ export async function getAdminOrders(
   const query = qs.toString();
   const data = await adminFetch<{ orders: AdminOrderListItem[] }>(
     `/api/admin/orders${query ? `?${query}` : ""}`,
+    token,
+  );
+  return data.orders;
+}
+
+export async function getKitchenOrders(
+  token: string,
+): Promise<KitchenTicket[]> {
+  const data = await adminFetch<{ orders: KitchenTicket[] }>(
+    "/api/admin/orders?scope=kitchen",
     token,
   );
   return data.orders;
