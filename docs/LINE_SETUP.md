@@ -79,9 +79,11 @@ LINE 前置資源**尚未建立**，將於開「LINE 整合」issue 時依本文
 
 | 變數 | 用途 | 放置位置 |
 | --- | --- | --- |
-| `LIFF_ID` | 前端 LIFF 初始化 | 前端可見（公開值） |
+| `NEXT_PUBLIC_LIFF_ID` | 前端 LIFF 初始化（Next 需 `NEXT_PUBLIC_` 前綴才注入瀏覽器） | 前端可見（公開值） |
 | `LINE_LOGIN_CHANNEL_ID` | 後端驗證 idToken 的 `aud` | 後端 |
 | `LINE_LOGIN_CHANNEL_SECRET` | 後端驗證 / 必要時換 token | **僅後端，secret** |
+
+> 實作狀態（Issue #11）：程式骨架已完成——前端 `lib/liff.ts` + `LiffGate`（`liff.init` / 登入 / 取得 idToken / 失敗 fallback），後端 `lib/line.ts` 向 `https://api.line.me/oauth2/v2.1/verify` 驗證 idToken（檢查 `aud`）。**未設定上述變數時自動採匿名下單**；填入真實值後即啟用 LINE 身分。
 
 規則：
 - `.env` **不可** commit（見 CLAUDE.md 安全規則）。提供 `.env.example` 範本，值留空或填佔位。
