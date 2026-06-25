@@ -84,10 +84,6 @@ export function OrderComplete() {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-xs text-neutral-400">
-        （原型示範：訂單編號為前端假產生，未實際建立訂單）
-      </p>
-
       <button
         type="button"
         onClick={() => router.push("/menu")}

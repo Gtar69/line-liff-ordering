@@ -1,7 +1,6 @@
 /**
- * 原型用的「假訂單」傳遞（Issue #2）。
- * 用 sessionStorage 把結帳結果帶到完成頁。
- * 注意：訂單編號為前端假產生的 demo 值，不保證唯一；真實建立與唯一編號於後端 Issue #5。
+ * 用 sessionStorage 把「已建立訂單」的結果從結帳帶到完成頁。
+ * Issue #8 起內容來自真實 POST /api/orders 回應（訂單編號由後端產生）。
  */
 
 export interface DemoOrderItem {
@@ -23,14 +22,6 @@ export interface DemoOrder {
 }
 
 const KEY = "demo_last_order";
-
-export function generateDemoOrderNumber(now: Date = new Date()): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  const seq = String(Math.floor(Math.random() * 9000) + 1000);
-  return `${y}${m}${d}-${seq}`;
-}
 
 export function saveDemoOrder(order: DemoOrder): void {
   if (typeof window === "undefined") return;

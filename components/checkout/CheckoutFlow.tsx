@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getPickupTimes, getStore } from "@/lib/apiClient";
+import {
+  ApiError,
+  createOrder,
+  getPickupTimes,
+  getStore,
+  type CreateOrderPayload,
+} from "@/lib/apiClient";
 import { lineTotal, useCart } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
-import {
-  generateDemoOrderNumber,
-  saveDemoOrder,
-  type DemoOrder,
-} from "@/lib/demoOrder";
+import { saveDemoOrder, type DemoOrder } from "@/lib/demoOrder";
 import type { PickupSlot, Store } from "@/lib/types";
 
 const NOTE_MAX = 200;
@@ -29,6 +31,12 @@ export function CheckoutFlow() {
   const [note, setNote] = useState("");
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [idempotencyKey] = useState(() =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `key-${Date.now()}`,
+  );
   const [errors, setErrors] = useState<{
     pickup?: string;
     name?: string;
@@ -81,7 +89,7 @@ export function CheckoutFlow() {
     setStep(2);
   };
 
-  const submit = () => {
+  const submit = async () => {
     const next: typeof errors = {};
     if (!name.trim()) next.name = "請填寫訂購人";
     if (!phone.trim()) next.phone = "請填寫手機號碼";
@@ -91,26 +99,49 @@ export function CheckoutFlow() {
     }
     if (note.length > NOTE_MAX) return;
 
-    const order: DemoOrder = {
-      order_number: generateDemoOrderNumber(),
-      store_name: store?.name ?? "",
-      pickup_method_label: "自取",
-      pickup_time_label: pickupLabel,
+    setErrors({});
+    setSubmitError(null);
+    setSubmitting(true);
+
+    const payload: CreateOrderPayload = {
+      pickup_method: "self_pickup",
+      pickup_time: pickupTime,
       customer_name: name.trim(),
-      total: subtotal,
+      customer_phone: phone.trim(),
       note: note.trim() || null,
       items: lines.map((l) => ({
-        name: l.name,
-        options: l.options.map((o) => o.label),
+        menu_item_id: l.item_id,
         quantity: l.quantity,
-        line_total: lineTotal(l),
+        option_ids: l.options.map((o) => o.option_id),
       })),
     };
 
-    setSubmitting(true);
-    saveDemoOrder(order);
-    clear();
-    router.push("/complete");
+    try {
+      const order = await createOrder(payload, idempotencyKey);
+      const stored: DemoOrder = {
+        order_number: order.order_number,
+        store_name: order.store_name,
+        pickup_method_label: "自取",
+        pickup_time_label: pickupLabel,
+        customer_name: name.trim(),
+        total: order.total,
+        note: note.trim() || null,
+        items: order.items.map((i) => ({
+          name: i.name,
+          options: i.options.map((o) => o.label),
+          quantity: i.quantity,
+          line_total: i.line_total,
+        })),
+      };
+      saveDemoOrder(stored);
+      clear();
+      router.push("/complete");
+    } catch (e) {
+      setSubmitting(false);
+      setSubmitError(
+        e instanceof ApiError ? e.message : "送出失敗，請稍後再試",
+      );
+    }
   };
 
   return (
@@ -211,6 +242,11 @@ export function CheckoutFlow() {
         )}
       </main>
 
+      {submitError && (
+        <p className="bg-red-50 px-4 py-2 text-center text-sm text-red-600">
+          {submitError}
+        </p>
+      )}
       <div className="sticky bottom-0 z-20 flex gap-3 border-t border-neutral-200 bg-white p-3">
         <button
           type="button"
@@ -221,7 +257,10 @@ export function CheckoutFlow() {
         </button>
         <button
           type="button"
-          onClick={() => (step === 1 ? goStep2() : submit())}
+          onClick={() => {
+            if (step === 1) goStep2();
+            else void submit();
+          }}
           className="h-12 flex-[2] rounded-xl bg-orange-500 font-semibold text-white"
         >
           {step === 1 ? "下一步" : "送出訂單"}
