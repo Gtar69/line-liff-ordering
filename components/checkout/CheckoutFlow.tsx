@@ -11,6 +11,7 @@ import {
 } from "@/lib/apiClient";
 import { lineTotal, useCart } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
+import { getIdToken } from "@/lib/liff";
 import { saveDemoOrder, type DemoOrder } from "@/lib/demoOrder";
 import type { PickupSlot, Store } from "@/lib/types";
 
@@ -117,7 +118,11 @@ export function CheckoutFlow() {
     };
 
     try {
-      const order = await createOrder(payload, idempotencyKey);
+      const order = await createOrder(
+        payload,
+        idempotencyKey,
+        getIdToken() ?? undefined,
+      );
       const stored: DemoOrder = {
         order_number: order.order_number,
         store_name: order.store_name,

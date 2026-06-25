@@ -57,12 +57,14 @@ export async function getPickupTimes(): Promise<PickupSlot[]> {
 export async function createOrder(
   payload: CreateOrderPayload,
   idempotencyKey?: string,
+  idToken?: string,
 ): Promise<OrderResponse> {
   const res = await fetch("/api/orders", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+      ...(idToken ? { authorization: `Bearer ${idToken}` } : {}),
     },
     body: JSON.stringify(payload),
   });
