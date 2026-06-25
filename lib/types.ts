@@ -130,6 +130,22 @@ export interface AdminOrderDetail {
   updated_at: string;
 }
 
+/** 廚房工單（GET /api/admin/orders?scope=kitchen） */
+export interface KitchenTicketItem {
+  name: string;
+  quantity: number;
+  options: string[];
+}
+export interface KitchenTicket {
+  id: string;
+  order_number: string;
+  status: string;
+  created_at: string;
+  pickup_time: string;
+  note: string | null;
+  items: KitchenTicketItem[];
+}
+
 /** 購物車品項；同商品不同選項組合視為不同 line（以 lineKey 區分） */
 export interface CartLine {
   /** 前端唯一鍵：item_id + 已選 option_ids 排序組合 */
