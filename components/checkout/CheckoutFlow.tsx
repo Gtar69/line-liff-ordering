@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getPickupTimes, getStore } from "@/lib/mock/menuAdapter";
+import { getPickupTimes, getStore } from "@/lib/apiClient";
 import { lineTotal, useCart } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
 import {

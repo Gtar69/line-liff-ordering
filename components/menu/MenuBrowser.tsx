@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMenu, getStore } from "@/lib/mock/menuAdapter";
+import { getMenu, getStore } from "@/lib/apiClient";
 import { useCart } from "@/lib/cart";
 import type { Menu, MenuItem, Store } from "@/lib/types";
 import { SearchBar } from "./SearchBar";
