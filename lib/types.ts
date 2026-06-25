@@ -94,6 +94,42 @@ export interface OrderResponse {
   payment_note: string;
 }
 
+/** 後台訂單列表項目（GET /api/admin/orders） */
+export interface AdminOrderListItem {
+  id: string;
+  order_number: string;
+  status: string;
+  created_at: string;
+  pickup_time: string;
+  customer_name: string;
+  customer_phone: string;
+  total: number;
+  items_summary: string;
+  item_count: number;
+}
+
+/** 後台訂單明細（GET /api/admin/orders/:id） */
+export interface AdminOrderDetail {
+  id: string;
+  order_number: string;
+  status: string;
+  pickup_method: string;
+  pickup_time: string;
+  customer_name: string;
+  customer_phone: string;
+  note: string | null;
+  subtotal: number;
+  total: number;
+  items: OrderResponseItem[];
+  status_history: {
+    from_status: string | null;
+    to_status: string;
+    changed_at: string;
+  }[];
+  created_at: string;
+  updated_at: string;
+}
+
 /** 購物車品項；同商品不同選項組合視為不同 line（以 lineKey 區分） */
 export interface CartLine {
   /** 前端唯一鍵：item_id + 已選 option_ids 排序組合 */
