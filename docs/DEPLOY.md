@@ -57,13 +57,20 @@ openssl rand -hex 32
 3. 展開 **Environment Variables**，依上表填入（至少 `DATABASE_URL`、`DIRECT_URL`、`ADMIN_API_TOKEN`）。
 4. 按 **Deploy**。
 
-部署時 build command 為 `prisma migrate deploy && next build`（見 `vercel.json`），
-會先把 migration 套用到 Supabase（建立資料表），再 build。
+部署時 build command 為 `prisma generate && next build`（見 `vercel.json`）。
+**migration 不在 build 跑**：Vercel build 環境連 Supabase pooler 可能 P1001（連不到），
+且 build 時 API route 皆為動態、不查 DB，故 build 不需連線。
 
-### 3. 灌入菜單資料（首次，手動執行一次）
+### 3. 套用 migration + 灌入菜單（首次，在本機指向 Supabase 跑一次）
 
-migration 只建立空資料表，菜單需另外匯入。**不放進 build**，避免每次部署覆蓋商家菜單。
-在本機指向 Supabase 執行一次即可：
+建表與菜單都在本機對 Supabase 執行一次即可（之後新增 migration 時再跑）：
+
+```bash
+# .env.local 填入 Supabase 的 DATABASE_URL 與 DIRECT_URL，然後：
+npx prisma migrate deploy   # 建立資料表（走 DIRECT_URL / 5432）
+```
+
+接著灌菜單：
 
 ```bash
 # 在本機 .env / .env.local 暫時填入 Supabase 的 DATABASE_URL 與 DIRECT_URL
