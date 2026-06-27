@@ -7,7 +7,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // 部署（Supabase + serverless）：DATABASE_URL = transaction pooler(6543)，
+  // directUrl = direct/session(5432) 供 migrate 使用。本機開發可兩者同值。
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum OrderStatus {
