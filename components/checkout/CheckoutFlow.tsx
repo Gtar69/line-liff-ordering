@@ -11,7 +11,7 @@ import {
 } from "@/lib/apiClient";
 import { lineTotal, useCart } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
-import { getIdToken } from "@/lib/liff";
+import { getIdToken, sendOrderMessage } from "@/lib/liff";
 import { saveDemoOrder, type DemoOrder } from "@/lib/demoOrder";
 import type { PickupSlot, Store } from "@/lib/types";
 
@@ -139,6 +139,7 @@ export function CheckoutFlow() {
         })),
       };
       saveDemoOrder(stored);
+      await sendOrderMessage({ orderNumber: order.order_number });
       clear();
       router.push("/complete");
     } catch (e) {
