@@ -2,6 +2,8 @@
 
 > 定義 LINE LIFF / LINE Login 的設定與整合方式。對應 `docs/PRD.md`、`docs/UI_FLOW.md`、`docs/API.md`。
 > **重要**：依 CLAUDE.md，LINE LIFF 設定於 LINE 整合 issue 才實作。本文件先把設定步驟與安全規則定稿。
+> **部署順序**：LIFF Endpoint URL 需填已部署的 HTTPS 網址（本專案用 Vercel，見 `docs/DEPLOY.md`）。
+> 建議先完成部署取得 `https://<project>.vercel.app`，再建立 LIFF app 並回填 `NEXT_PUBLIC_LIFF_ID`、`LINE_LOGIN_CHANNEL_ID` 後重新部署。
 
 ## 資源建立狀態（2026-06-24）
 
