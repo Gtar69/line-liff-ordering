@@ -41,3 +41,24 @@ export function getIdToken(): string | null {
     return null;
   }
 }
+
+/**
+ * 下單成功後，從聊天室發一則含訂單編號的訊息給 LINE@（觸發 webhook 自動回覆）。
+ * 條件不符（未設定 / 非從聊天室開）時靜默略過；永不丟錯，不可影響下單結果。
+ */
+export async function sendOrderMessage(input: {
+  orderNumber: string;
+}): Promise<void> {
+  if (!isLiffConfigured()) return;
+  try {
+    if (!liff.isApiAvailable("sendMessages")) return;
+    await liff.sendMessages([
+      {
+        type: "text",
+        text: `我已送出訂單\n訂單編號：${input.orderNumber}`,
+      },
+    ]);
+  } catch {
+    // 非聊天室環境 / 權限不足 / 網路錯誤 → 忽略
+  }
+}

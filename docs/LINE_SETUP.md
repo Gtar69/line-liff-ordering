@@ -117,9 +117,54 @@ LINE 前置資源**尚未建立**，將於開「LINE 整合」issue 時依本文
   - idToken 缺失 / 驗證失敗時，仍允許下單但不寫入 `line_user_id`，記錄為匿名訂單。
 - 不論何者，後端都不可信任前端帶入的身分。
 
+## Messaging API 訂單自動回覆（已實作）
+
+> 使用者要求：客人在 LIFF 點完餐 → 自己發一則訊息給商家 LINE@ → 商家後端透過
+> Messaging API **reply** 自動回覆「點餐完畢」。reply 免費、不佔推播額度。
+> 設計與計畫見 `docs/superpowers/specs/2026-06-27-line-order-reply-design.md`
+> 與 `docs/superpowers/plans/2026-06-27-line-order-reply.md`。
+
+### 流程
+
+```
+客人 LIFF 下單成功
+  │ ① liff.sendMessages() 發「訂單編號：YYYYMMDD-NNNN」進 LINE@ 聊天室
+  ▼
+LINE@（Messaging API 官方帳號）
+  │ ② LINE webhook POST 到 /api/line/webhook
+  ▼
+後端：驗簽章 → 抓訂單編號 → 查 DB 確認 → reply API 回覆「✅ 點餐完畢 …」
+```
+
+### 設定步驟
+
+1. **建立 / 使用 Messaging API 官方帳號**（與 LINE Login channel 不同的 channel）。
+   - 取得 **Channel access token（long-lived）** 與 **Channel secret**。
+2. **Webhook**：
+   - Webhook URL 設為 `https://line-liff-ordering.vercel.app/api/line/webhook`。
+   - 開啟「Use webhook / 使用 webhook」。
+3. **關閉「自動回應訊息」**（LINE Official Account Manager → 回應設定），避免與本回覆衝突。
+4. **LIFF app** 勾選 **`chat_message.write`** scope（`liff.sendMessages` 必需）。
+5. 確認客人開啟 LIFF 的聊天室 = 此 Messaging API 官方帳號（客人需先加為好友）。
+
+### 環境變數（設於 Vercel，僅後端）
+
+| 變數 | 用途 |
+| --- | --- |
+| `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN` | 後端呼叫 reply API |
+| `LINE_MESSAGING_CHANNEL_SECRET` | 驗證 webhook `x-line-signature` |
+
+> 未設定上述兩個變數時，webhook 視為未啟用、靜默略過，不影響下單主流程。
+
+### 安全
+
+- webhook 一律驗證 `x-line-signature`（HMAC-SHA256），擋偽造請求。
+- 訊息中的訂單編號為客人端可控 → 後端以編號查 DB 確認後，用 DB 真實資料組回覆。
+- access token / secret 僅後端、不進前端、不寫死、不 commit。
+
 ## 日後增強（非 MVP）
 
-- 以 Messaging API 推播訂單狀態變更通知客人。
+- 以 Messaging API **push** 主動推播訂單狀態變更通知客人（本功能僅做 reply）。
 - 綁定 LINE user id 與歷史訂單（需獨立訂單查詢入口，目前非 MVP）。
 
-> 身分策略已確認（可選身分折衷）。待 LINE 前置資源建立（見頂部狀態清單）後，於 LINE 整合 issue 進入 LIFF 實作。
+> 身分策略已確認（可選身分折衷）。LIFF 與 Messaging API 自動回覆已實作；LINE 前置資源依頂部狀態清單與本節步驟設定。
