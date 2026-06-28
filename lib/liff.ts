@@ -46,19 +46,31 @@ export function getIdToken(): string | null {
  * 下單成功後，從聊天室發一則含訂單編號的訊息給 LINE@（觸發 webhook 自動回覆）。
  * 條件不符（未設定 / 非從聊天室開）時靜默略過；永不丟錯，不可影響下單結果。
  */
+// [暫時診斷] 之後移除：在瀏覽器顯示訊息，node 測試環境無 alert 則略過。
+function dbg(msg: string): void {
+  if (typeof alert !== "undefined") alert(msg);
+}
+
 export async function sendOrderMessage(input: {
   orderNumber: string;
 }): Promise<void> {
-  if (!isLiffConfigured()) return;
+  if (!isLiffConfigured()) {
+    dbg("診斷①：LIFF 未設定（NEXT_PUBLIC_LIFF_ID 空）");
+    return;
+  }
   try {
-    if (!liff.isApiAvailable("sendMessages")) return;
+    const inClient = liff.isInClient();
+    const avail = liff.isApiAvailable("sendMessages");
+    dbg(`診斷②：isInClient=${inClient} / sendMessages可用=${avail}`);
+    if (!avail) return;
     await liff.sendMessages([
       {
         type: "text",
         text: `我已送出訂單\n訂單編號：${input.orderNumber}`,
       },
     ]);
-  } catch {
-    // 非聊天室環境 / 權限不足 / 網路錯誤 → 忽略
+    dbg("診斷③：sendMessages 已送出 ✅");
+  } catch (e) {
+    dbg(`診斷④：sendMessages 失敗：${e instanceof Error ? e.message : String(e)}`);
   }
 }
